@@ -21,7 +21,6 @@ export function createSketch({
   let cellsPerFrame = 200;
   let canvasSize = { width: 640, height: 480 };
   let baseImage = null;
-  let textColor = '#ffffff';
   let cellSizePx = 14;
   let doneExpected = false;
   let lastQueueLength = -1;
@@ -37,7 +36,7 @@ export function createSketch({
       p.noStroke();
       buffer = p.createGraphics(canvasSize.width, canvasSize.height);
       buffer.textFont('monospace');
-      buffer.textSize(cellSizePx);
+      buffer.textSize(cellSizePx*1.5);
       buffer.textAlign(p.CENTER, p.CENTER);
       resetBuffer();
     };
@@ -60,7 +59,6 @@ export function createSketch({
     function flushQueue() {
       if (!buffer) return;
       const count = Math.min(cellsPerFrame, drawQueue.length);
-      buffer.fill(textColor);
       for (let i = 0; i < count; i += 1) {
         const cell = drawQueue.shift();
         cell.draw(buffer);
@@ -129,11 +127,6 @@ export function createSketch({
     instance,
     setMessage(text) {
       message = text;
-    },
-    setTextColor(color) {
-      if (typeof color === 'string' && color.trim()) {
-        textColor = color;
-      }
     },
     setCellSize(size) {
       if (Number.isFinite(size) && size > 0) {

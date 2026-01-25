@@ -72,7 +72,6 @@ panes = setupPanes({
     if (currentState === AppState.RUNNING) return;
     pendingParams = params;
     sketch.setCellsPerFrame(params.cellsPerFrame);
-    sketch.setTextColor(params.textColor);
     sketch.setCellSize(params.cellSizePx);
     sketch.setMaskVisible(params.showMaskOverlay);
     sketch.setMaskImage(null);
@@ -88,7 +87,6 @@ panes = setupPanes({
   onParamsChange: (params) => {
     pendingParams = params;
     sketch.setCellsPerFrame(params.cellsPerFrame);
-    sketch.setTextColor(params.textColor);
     sketch.setCellSize(params.cellSizePx);
     sketch.setMaskVisible(params.showMaskOverlay);
   },

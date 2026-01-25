@@ -310,6 +310,9 @@ async function buildAsciiCells({
       const x = col * cellSizePx;
       const y = row * cellSizePx;
       let lumSum = 0;
+      let rSum = 0;
+      let gSum = 0;
+      let bSum = 0;
       let samples = 0;
       let coverageSum = 0;
 
@@ -323,6 +326,9 @@ async function buildAsciiCells({
           const b = data[idx + 2];
           const yVal = 0.2126 * r + 0.7152 * g + 0.0722 * b;
           lumSum += yVal;
+          rSum += r;
+          gSum += g;
+          bSum += b;
           if (unionMask && maskWidth && maskHeight) {
             const mx = Math.min(maskWidth - 1, Math.floor(px * maskScaleX));
             const my = Math.min(maskHeight - 1, Math.floor(py * maskScaleY));
@@ -338,12 +344,20 @@ async function buildAsciiCells({
       const char = charSet[idx] ?? '#';
       const coverage = samples ? coverageSum / samples : 0;
       const active = unionMask ? coverage >= coverageThreshold : true;
+      const color = samples
+        ? {
+            r: Math.round(rSum / samples),
+            g: Math.round(gSum / samples),
+            b: Math.round(bSum / samples),
+          }
+        : null;
 
       chunk.push({
         x: x + cellSizePx * 0.5,
         y: y + cellSizePx * 0.5,
         char,
         active,
+        color,
       });
       done += 1;
 

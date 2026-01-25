@@ -92,6 +92,7 @@ export function setupPanes({
   const classFolder = segmentationFolder.addFolder({ title: 'Detect Classes' });
   classFolder.element?.classList.add('detect-classes');
   const selectRow = classFolder.addFolder({ title: 'Selection' });
+  selectRow.element?.classList.add('detect-classes-actions');
   const selectAllButton = selectRow.addButton({ title: 'Select All' });
   const deselectAllButton = selectRow.addButton({ title: 'Deselect All' });
   let classPlaceholderState = { text: 'ラベル未読み込み' };
@@ -184,14 +185,6 @@ export function setupPanes({
     step: 1,
   }).on('change', (ev) => {
     params.cellSizePx = ev.value;
-    onParamsChange?.({ ...params });
-  });
-
-  asciiFolder.addBinding(params, 'textColor', {
-    label: 'ASCII Text Color',
-    view: 'color',
-  }).on('change', (ev) => {
-    params.textColor = ev.value;
     onParamsChange?.({ ...params });
   });
 

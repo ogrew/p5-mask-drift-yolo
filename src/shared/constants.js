@@ -21,7 +21,6 @@ export const DefaultParams = Object.freeze({
   sampleName: SampleImages[0]?.value ?? '',
   charSet: ' .:-=+*#%@',
   cellSizePx: 16,
-  textColor: '#ffffff',
   showMaskOverlay: false,
   cellsPerFrame: 200,
   cellsChunkSize: 5000,
