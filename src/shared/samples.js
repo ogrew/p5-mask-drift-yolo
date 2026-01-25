@@ -1,0 +1,16 @@
+export const SampleImages = [
+  { label: 'cars/c1.jpg', value: 'cars/c1.jpg' },
+  { label: 'cars/c2.jpg', value: 'cars/c2.jpg' },
+  { label: 'cars/c3.jpg', value: 'cars/c3.jpg' },
+  { label: 'cars/c4.jpg', value: 'cars/c4.jpg' },
+  { label: 'cars/c5.jpg', value: 'cars/c5.jpg' },
+  { label: 'desk/m1.jpg', value: 'desk/m1.jpg' },
+  { label: 'desk/m2.jpg', value: 'desk/m2.jpg' },
+  { label: 'desk/m3.jpg', value: 'desk/m3.jpg' },
+  { label: 'desk/m4.jpg', value: 'desk/m4.jpg' },
+  { label: 'desk/m5.jpg', value: 'desk/m5.jpg' },
+  { label: 'dogs/d1.jpg', value: 'dogs/d1.jpg' },
+  { label: 'dogs/d2.jpg', value: 'dogs/d2.jpg' },
+  { label: 'dogs/d3.jpg', value: 'dogs/d3.jpg' },
+  { label: 'dogs/d4.jpg', value: 'dogs/d4.jpg' },
+];

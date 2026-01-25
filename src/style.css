@@ -1,0 +1,63 @@
+:root {
+  color-scheme: light;
+  font-family: "Noto Sans JP", system-ui, -apple-system, sans-serif;
+  background: #ffffff;
+  color: #1b1a17;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+#layout {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+#canvas-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+#canvas-panel canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#ui-overlay {
+  position: fixed;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 320px;
+  pointer-events: auto;
+  z-index: 2;
+}
+
+#run-panel,
+#params-panel {
+  border: 1px solid #cbb89d;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 12px;
+  backdrop-filter: blur(6px);
+}
+
+@media (max-width: 960px) {
+  #ui-overlay {
+    width: min(90vw, 360px);
+    right: 12px;
+    top: 12px;
+  }
+}
