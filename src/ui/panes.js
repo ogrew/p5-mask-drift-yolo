@@ -38,9 +38,9 @@ export function setupPanes({
     onStop?.();
   });
 
-  const inputFolder = paramsPane.addFolder({ title: 'A.入力' });
-  const segmentationFolder = paramsPane.addFolder({ title: 'B.セグメンテーション' });
-  const asciiFolder = paramsPane.addFolder({ title: 'C.ASCIIレンダリング' });
+  const inputFolder = paramsPane.addFolder({ title: 'A.入力', expanded: false });
+  const segmentationFolder = paramsPane.addFolder({ title: 'B.セグメンテーション', expanded: false });
+  const asciiFolder = paramsPane.addFolder({ title: 'C.ASCIIレンダリング', expanded: false });
 
   const imageSourceBinding = inputFolder.addBinding(params, 'imageSource', {
     label: 'Image Source',
@@ -90,6 +90,10 @@ export function setupPanes({
   });
 
   const classFolder = segmentationFolder.addFolder({ title: 'Detect Classes' });
+  classFolder.element?.classList.add('detect-classes');
+  const selectRow = classFolder.addFolder({ title: 'Selection' });
+  const selectAllButton = selectRow.addButton({ title: 'Select All' });
+  const deselectAllButton = selectRow.addButton({ title: 'Deselect All' });
   let classPlaceholderState = { text: 'ラベル未読み込み' };
   let classPlaceholder = classFolder.addBinding(classPlaceholderState, 'text', {
     label: '状態',
@@ -106,6 +110,26 @@ export function setupPanes({
     params.selectedClassIndices = indices;
     onParamsChange?.({ ...params });
   }
+
+  function refreshClassBindings() {
+    classBindings.forEach((binding) => binding.refresh());
+  }
+
+  selectAllButton.on('click', () => {
+    classMeta.forEach((meta) => {
+      classParams[meta.key] = true;
+    });
+    refreshClassBindings();
+    updateSelectedClasses();
+  });
+
+  deselectAllButton.on('click', () => {
+    classMeta.forEach((meta) => {
+      classParams[meta.key] = false;
+    });
+    refreshClassBindings();
+    updateSelectedClasses();
+  });
 
   function clearClassBindings() {
     classBindings.forEach((binding) => binding.dispose());
@@ -180,9 +204,9 @@ export function setupPanes({
 
   asciiFolder.addBinding(params, 'cellsPerFrame', {
     label: 'Cells/Frame',
-    min: 200,
-    max: 10000,
-    step: 100,
+    min: 50,
+    max: 5000,
+    step: 50,
   }).on('change', (ev) => {
     params.cellsPerFrame = ev.value;
     onParamsChange?.({ ...params });

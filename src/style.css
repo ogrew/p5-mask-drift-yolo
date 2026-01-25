@@ -48,10 +48,37 @@ body {
 
 #run-panel,
 #params-panel {
-  border: 1px solid #cbb89d;
-  background: rgba(255, 255, 255, 0.92);
-  padding: 12px;
-  backdrop-filter: blur(6px);
+  border: none;
+  background: transparent;
+  padding: 0;
+  backdrop-filter: none;
+}
+
+#params-panel .detect-classes .tp-fldv_c {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 16px;
+  row-gap: 6px;
+}
+
+#params-panel .detect-classes .tp-lblv {
+  margin: 0;
+}
+
+#params-panel .detect-classes .tp-lblv_l {
+  font-size: 12px;
+  line-height: 1.2;
+  min-width: 90px;
+}
+
+#params-panel .detect-classes .tp-lblv_v {
+  justify-content: flex-end;
+}
+
+#params-panel .tp-rotv_c {
+  max-height: calc((100vh - 96px) * 0.66);
+  overflow: auto;
+  padding-right: 4px;
 }
 
 @media (max-width: 960px) {

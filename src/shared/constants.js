@@ -23,7 +23,7 @@ export const DefaultParams = Object.freeze({
   cellSizePx: 16,
   textColor: '#ffffff',
   showMaskOverlay: false,
-  cellsPerFrame: 2000,
+  cellsPerFrame: 200,
   cellsChunkSize: 5000,
   maxLongEdge: 2560,
   samplesPerCell: 4,

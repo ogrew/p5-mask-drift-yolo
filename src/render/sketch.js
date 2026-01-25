@@ -18,7 +18,7 @@ export function createSketch({
   let message = '待機中';
   let buffer = null;
   let drawQueue = [];
-  let cellsPerFrame = 2000;
+  let cellsPerFrame = 200;
   let canvasSize = { width: 640, height: 480 };
   let baseImage = null;
   let textColor = '#ffffff';
