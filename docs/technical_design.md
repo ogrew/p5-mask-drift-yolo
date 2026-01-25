@@ -1,4 +1,4 @@
-# 技術詳細設計書 — Mask-to-ASCII（仮）
+# 技術詳細設計書 — mask-drift-yolo（仮）
 
 作成日: 2026-01-24  
 版: v0.1（レビュー用）
@@ -11,8 +11,8 @@
 - **STOPで中断可能**（=処理中でもUIが固まらないことが前提）。
 - セグメンテーションは **YOLO Seg（ONNX Runtime Web）**。
 - マスク生成は **instance mask の union**（選択クラスのみ OR 合成）。
-- ASCII化は **下地画像の明度ベース**（ランダムのみは禁止）。
-- 描画は **逐次描画（演出＋負荷分散）**。完成まで時間がかかってOK。
+- モザイク色は **下地画像の平均RGB** を使用。
+- 描画は **Flow Field によるアニメーション描画**。完成まで時間がかかってOK。
 - 公開は **GitHub Pages**（静的配信）。パス解決（base）を最初から意識する。
 
 ---
@@ -32,7 +32,7 @@
 - 画像前処理（縮小・ImageData化）
 - ONNX Runtime Web + YOLO Seg のロード＆推論
 - instance masks → unionマスク生成（選択クラスのみ）
-- グリッド分割、セル単位の被覆率・明度計算、文字決定
+- グリッド分割、セル単位の被覆率・平均RGB計算
 - チャンク単位で結果をMainへ送る（逐次描画用）
 
 > 重要：STOPを「ちゃんと効かせる」ために、推論・大規模配列処理は **Worker前提**。  
@@ -53,13 +53,13 @@
   -> unionMask (selected classes, OR)
   -> STATUS: building cells
   -> for each cell chunk:
-       compute coverage + luminance + char
+       compute coverage + average RGB
        postMessage(chunk)
   -> STATUS: done
 
 [Main: p5]
-  -> receive chunk -> create MosaicCell -> store + enqueue
-  -> draw N cells / frame
+  -> receive chunk -> create MosaicCell particles -> enqueue
+  -> animate particles via Flow Field, paint to buffer
   -> STOP => terminate worker + stop drawing + unlock PARAMS_UI
 ```
 
@@ -74,7 +74,7 @@
   - STOP（中断）
   - STATUS表示エリア（例：「推論中…」「レンダリング中…」）
 - **PARAMS_UI**
-  - A.入力 / B.セグメンテーション / C.ASCIIレンダリング の各パラメータ
+  - A.入力 / B.セグメンテーション / C.レンダリング の各パラメータ
 
 ### 2.2 UIのロック方針
 
@@ -104,7 +104,10 @@ Workerが受け取るデータ（例）:
 - `params`:
   - `maxLongEdge = 2560`
   - `cellSizePx`
-  - `charSet`
+  - `tileShape` / `tileAlpha`
+  - `moveFrames` / `maxSpeed`
+  - `flowFreq` / `flowTwist` / `flowZSpeed` / `force`
+  - `snapToGrid` / `wrapEdges`
   - `coverageThreshold = 0.2`
   - `selectedClassIndices: number[]`（COCO class ids）
   - `cellsChunkSize`（例：5000セル単位でpostMessage）
@@ -310,7 +313,7 @@ src/
 1. p5 canvas + RUN/STOP + STATUS（ダミーで逐次描画だけ通す）
 2. Worker導入（チャンク送信→Main描画）
 3. 画像読み込み（Sample/Upload）→ Workerへ送る
-4. Worker側で縮小+明度ベースASCII（セグメンテーション無し）を完成させる
+4. Worker側で縮小+平均RGBベースのセル生成（セグメンテーション無し）を完成させる
 5. YOLO Seg + ONNX Runtime Web導入（推論が動くところまで）
 6. instance masks → unionMask → coverage判定
 7. 複数クラス選択UIを接続してunionが変わることを確認

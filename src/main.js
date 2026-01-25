@@ -165,9 +165,9 @@ function resolveSampleUrl(sampleName) {
 }
 
 function getBaseName(name) {
-  if (!name) return 'mask_to_ascii';
+  if (!name) return 'mask_drift_yolo';
   const tail = name.split('/').pop() || name;
-  return tail.replace(/\.[^/.]+$/, '') || 'mask_to_ascii';
+  return tail.replace(/\.[^/.]+$/, '') || 'mask_drift_yolo';
 }
 
 
@@ -199,7 +199,7 @@ async function startRun(params) {
   }
 
   let sourceBlob = null;
-  let saveBaseName = 'mask_to_ascii';
+  let saveBaseName = 'mask_drift_yolo';
   if (params.imageSource === 'Upload') {
     if (!params.imageFile) {
       setState(AppState.ERROR, RunStage.NONE, 'エラー: 画像を選択してください');

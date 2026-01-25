@@ -40,7 +40,7 @@ export function setupPanes({
 
   const inputFolder = paramsPane.addFolder({ title: 'A.入力', expanded: false });
   const segmentationFolder = paramsPane.addFolder({ title: 'B.セグメンテーション', expanded: false });
-  const asciiFolder = paramsPane.addFolder({ title: 'C.レンダリング', expanded: false });
+  const renderFolder = paramsPane.addFolder({ title: 'C.レンダリング', expanded: false });
 
   const imageSourceBinding = inputFolder.addBinding(params, 'imageSource', {
     label: 'Image Source',
@@ -178,7 +178,7 @@ export function setupPanes({
     onParamsChange?.({ ...params });
   });
 
-  asciiFolder.addBinding(params, 'cellSizePx', {
+  renderFolder.addBinding(params, 'cellSizePx', {
     label: 'Grid Size',
     min: 1,
     max: 50,
@@ -188,7 +188,7 @@ export function setupPanes({
     onParamsChange?.({ ...params });
   });
 
-  asciiFolder.addBinding(params, 'tileShape', {
+  renderFolder.addBinding(params, 'tileShape', {
     label: 'Tile Shape',
     options: {
       Rect: 'rect',
@@ -199,7 +199,7 @@ export function setupPanes({
     onParamsChange?.({ ...params });
   });
 
-  asciiFolder.addBinding(params, 'tileAlpha', {
+  renderFolder.addBinding(params, 'tileAlpha', {
     label: 'Tile Alpha',
     min: 0.1,
     max: 1,
@@ -209,7 +209,7 @@ export function setupPanes({
     onParamsChange?.({ ...params });
   });
 
-  asciiFolder.addBinding(params, 'moveFrames', {
+  renderFolder.addBinding(params, 'moveFrames', {
     label: 'Move Frames',
     view: 'text',
   }).on('change', (ev) => {
@@ -218,7 +218,7 @@ export function setupPanes({
     onParamsChange?.({ ...params });
   });
 
-  asciiFolder.addBinding(params, 'flowFreq', {
+  renderFolder.addBinding(params, 'flowFreq', {
     label: 'Flow Freq',
     min: 0.01,
     max: 0.2,
@@ -228,7 +228,7 @@ export function setupPanes({
     onParamsChange?.({ ...params });
   });
 
-  asciiFolder.addBinding(params, 'flowTwist', {
+  renderFolder.addBinding(params, 'flowTwist', {
     label: 'Flow Twist',
     min: 0.5,
     max: 4,
@@ -238,7 +238,7 @@ export function setupPanes({
     onParamsChange?.({ ...params });
   });
 
-  asciiFolder.addBinding(params, 'flowZSpeed', {
+  renderFolder.addBinding(params, 'flowZSpeed', {
     label: 'Flow Z Speed',
     min: 0.0,
     max: 0.3,
@@ -248,7 +248,7 @@ export function setupPanes({
     onParamsChange?.({ ...params });
   });
 
-  asciiFolder.addBinding(params, 'force', {
+  renderFolder.addBinding(params, 'force', {
     label: 'Force',
     min: 0.05,
     max: 1,
@@ -258,7 +258,7 @@ export function setupPanes({
     onParamsChange?.({ ...params });
   });
 
-  asciiFolder.addBinding(params, 'maxSpeed', {
+  renderFolder.addBinding(params, 'maxSpeed', {
     label: 'Max Speed',
     min: 1,
     max: 5,
@@ -268,14 +268,14 @@ export function setupPanes({
     onParamsChange?.({ ...params });
   });
 
-  asciiFolder.addBinding(params, 'snapToGrid', {
+  renderFolder.addBinding(params, 'snapToGrid', {
     label: 'Snap To Grid',
   }).on('change', (ev) => {
     params.snapToGrid = ev.value;
     onParamsChange?.({ ...params });
   });
 
-  asciiFolder.addBinding(params, 'wrapEdges', {
+  renderFolder.addBinding(params, 'wrapEdges', {
     label: 'Wrap Edges',
   }).on('change', (ev) => {
     params.wrapEdges = ev.value;

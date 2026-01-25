@@ -1,7 +1,7 @@
 {
-  "name": "mask2ascii",
+  "name": "mask-drift-yolo",
   "version": "1.0.0",
-  "description": "YOLO Seg (COCO) のセグメンテーション結果を使って、対象領域のみをASCIIアートとして描画するWebアプリです。",
+  "description": "YOLO Seg (COCO) のセグメンテーション結果を使って、対象領域をFlow Fieldで流すモザイク表現を描画するWebアプリです。",
   "main": "index.html",
   "directories": {
     "doc": "docs"

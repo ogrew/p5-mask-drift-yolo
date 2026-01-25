@@ -1,4 +1,4 @@
-# タスクリスト — Mask-to-ASCII（仮）
+# タスクリスト — mask-drift-yolo（仮）
 
 作成日: 2026-01-24  
 版: v0.1
@@ -7,7 +7,7 @@
 
 ## 0. 進め方（このタスクリストの使い方）
 - 各タスクは「大項目 → 中項目 → 小項目」で分解する。
-- **先に“動く骨格”を作ってから**、推論・マスク・ASCII品質を順に上げる。
+- **先に“動く骨格”を作ってから**、推論・マスク・モザイク品質を順に上げる。
 - STOPが効くこと（=UIが固まらないこと）を常に優先し、重い処理はWorkerに寄せる。
 
 ---
@@ -68,7 +68,7 @@
   - [ ] RUNNING: RUN disabled, STOP enabled
   - [ ] DONE/STOPPED/ERROR: RUN enabled, STOP disabled
 
-### 2.4 PARAMS_UI（入力/推論/ASCII）
+### 2.4 PARAMS_UI（入力/推論/レンダリング）
 - [ ] TweakpaneでPARAMS_UIを作成
   - [ ] A.入力
     - [ ] Image Source: Sample / Upload
@@ -76,7 +76,7 @@
     - [ ] Upload選択: ファイル選択ボタン（隠しinput type=file）
   - [ ] B.セグメンテーション
     - [ ] Detect Classes（チェックボックス群）用のUI枠を用意（初期はダミーでも可）
-  - [ ] C.ASCIIレンダリング
+  - [ ] C.レンダリング
     - [ ] Grid size（cellSizePx）スライダー
     - [ ] Characters（charSet）テキスト入力
     - [ ] 逐次描画テンポ（cellsPerFrameなど）※UIに出すか内部定数か決める
@@ -134,7 +134,7 @@
 
 ---
 
-## 5. ASCIIレンダリング（セグメンテーション無しで完成形に寄せる）
+## 5. モザイクレンダリング（セグメンテーション無しで完成形に寄せる）
 
 ### 5.1 Worker側：画像前処理
 - [ ] WorkerでOffscreenCanvas + ImageData取得
@@ -191,17 +191,16 @@
 
 ---
 
-## 7. マスク×ASCII（coverage閾値0.2）
+## 7. マスク×モザイク（coverage閾値0.2）
 
 ### 7.1 被覆率（coverage）計算の実装
 - [ ] セル内サンプリングで unionMask の平均α or on率を計算
 - [ ] `coverageThreshold = 0.2` を適用
   - [ ] `coverage < threshold` のセルは `active=false`（背景扱い）
-  - [ ] `coverage >= threshold` のセルは `active=true`（ASCII描画対象）
+  - [ ] `coverage >= threshold` のセルは `active=true`（モザイク描画対象）
 
-### 7.2 ASCII文字決定（明度ベースを維持）
-- [ ] `active=true` セルのみ文字を描く（または背景文字は空白）
-- [ ] `charSet` 空入力時のガード（RUN不可 or デフォルト）
+### 7.2 モザイク色決定（平均RGB）
+- [ ] `active=true` セルのみタイルを描く
 
 ### 7.3 “複数クラス選択”の検証
 - [ ] dog + chair + bus などで union が期待通り効くことを確認
@@ -228,15 +227,14 @@
 
 ---
 
-## 9. 出力（PNGダウンロード）
+## 9. 出力（JPGダウンロード）
 
-### 9.1 Canvas→PNG保存
-- [ ] p5 Canvas を `toDataURL` 等でPNG保存できるようにする
-- [ ] “保存”ボタンの追加場所を決める（RUN_UIでもPARAMS_UIでも可）
-  - [ ] 仕様上必須（PNG DL）
+### 9.1 Canvas→JPG保存
+- [ ] `S` キーでキャンバスをJPG保存できるようにする
+- [ ] 保存名を `<basename>_<unixtime>.jpg` にする
 
 ### 9.2 ファイル名規則（最低限）
-- [ ] `mask_to_ascii_YYYYMMDD_HHMMSS.png` 等の簡易ルールを決める（任意）
+- [ ] `<basename>_<unixtime>.jpg` 等の簡易ルールを決める（任意）
 
 ---
 
@@ -288,7 +286,7 @@
 - [ ] charSet変更が反映される（STOP→変更→RUN）
 
 ### 12.3 保存
-- [ ] PNGダウンロードができる（内容がCanvas一致）
+- [ ] JPGダウンロードができる（内容がCanvas一致）
 
 ### 12.4 公開環境（GitHub Pages）
 - [ ] 公開URLで wasm/model/assets が正しくロードされる

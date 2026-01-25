@@ -28,7 +28,7 @@ export function createSketch({
   let lastQueueLength = -1;
   let maskImage = null;
   let maskVisible = false;
-  let saveBaseName = 'mask_to_ascii';
+  let saveBaseName = 'mask_drift_yolo';
   let particleConfig = {
     cellSize: cellSizePx,
     flowFreq: 0.08,
