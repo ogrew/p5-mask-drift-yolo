@@ -73,6 +73,7 @@ panes = setupPanes({
     pendingParams = params;
     sketch.setCellsPerFrame(params.cellsPerFrame);
     sketch.setTextColor(params.textColor);
+    sketch.setCellSize(params.cellSizePx);
     sketch.setMaskVisible(params.showMaskOverlay);
     sketch.setMaskImage(null);
     sketch.setDoneExpected(false);
@@ -88,6 +89,7 @@ panes = setupPanes({
     pendingParams = params;
     sketch.setCellsPerFrame(params.cellsPerFrame);
     sketch.setTextColor(params.textColor);
+    sketch.setCellSize(params.cellSizePx);
     sketch.setMaskVisible(params.showMaskOverlay);
   },
 });

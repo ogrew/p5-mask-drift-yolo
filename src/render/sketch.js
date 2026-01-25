@@ -22,6 +22,7 @@ export function createSketch({
   let canvasSize = { width: 640, height: 480 };
   let baseImage = null;
   let textColor = '#ffffff';
+  let cellSizePx = 14;
   let doneExpected = false;
   let lastQueueLength = -1;
   let maskImage = null;
@@ -36,18 +37,23 @@ export function createSketch({
       p.noStroke();
       buffer = p.createGraphics(canvasSize.width, canvasSize.height);
       buffer.textFont('monospace');
-      buffer.textSize(14);
+      buffer.textSize(cellSizePx);
+      buffer.textAlign(p.CENTER, p.CENTER);
       resetBuffer();
     };
 
     p.draw = () => {
-      p.background('#ffffff');
-      if (buffer) {
-        flushQueue();
-        p.image(buffer, 0, 0);
+      if (baseImage) {
+        p.drawingContext.drawImage(baseImage, 0, 0, canvasSize.width, canvasSize.height);
+      } else {
+        p.background('#ffffff');
       }
       if (maskVisible && maskImage) {
         p.drawingContext.drawImage(maskImage, 0, 0, canvasSize.width, canvasSize.height);
+      }
+      if (buffer) {
+        flushQueue();
+        p.image(buffer, 0, 0);
       }
     };
 
@@ -66,10 +72,6 @@ export function createSketch({
     function resetBuffer() {
       if (!buffer) return;
       buffer.clear();
-      buffer.background('#ffffff');
-      if (baseImage) {
-        buffer.drawingContext.drawImage(baseImage, 0, 0, buffer.width, buffer.height);
-      }
     }
 
     p.resetBuffer = resetBuffer;
@@ -79,7 +81,8 @@ export function createSketch({
       p.resizeCanvas(width, height);
       buffer = p.createGraphics(width, height);
       buffer.textFont('monospace');
-      buffer.textSize(14);
+      buffer.textSize(cellSizePx);
+      buffer.textAlign(p.CENTER, p.CENTER);
       resetBuffer();
     };
   });
@@ -99,7 +102,6 @@ export function createSketch({
 
   function setBaseImage(image) {
     baseImage = image;
-    instance.resetBuffer?.();
   }
 
   function setMaskImage(image) {
@@ -131,6 +133,14 @@ export function createSketch({
     setTextColor(color) {
       if (typeof color === 'string' && color.trim()) {
         textColor = color;
+      }
+    },
+    setCellSize(size) {
+      if (Number.isFinite(size) && size > 0) {
+        cellSizePx = size;
+        if (buffer) {
+          buffer.textSize(cellSizePx);
+        }
       }
     },
     setMaskImage,
