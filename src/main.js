@@ -15,6 +15,7 @@ let runToken = 0;
 let pendingParams = null;
 let panes = null;
 let displayBitmap = null;
+let animationActive = false;
 
 const sketch = createSketch({
   container: canvasContainer,
@@ -22,7 +23,15 @@ const sketch = createSketch({
   onQueueLength: (length) => {
     panes?.status?.setQueue?.(length);
   },
+  onAnimationProgress: ({ frame, total }) => {
+    if (!animationActive || !total || frame > total) return;
+    const text = `アニメーション中… ${frame}/${total}`;
+    statusText = text;
+    panes?.status?.set(text);
+    sketch.setMessage(text);
+  },
   onRenderComplete: () => {
+    animationActive = false;
     setState(AppState.DONE, RunStage.NONE, '完了');
   },
 });
@@ -73,6 +82,19 @@ panes = setupPanes({
     pendingParams = params;
     sketch.setCellsPerFrame(params.cellsPerFrame);
     sketch.setCellSize(params.cellSizePx);
+    sketch.setParticleConfig({
+      cellSize: params.cellSizePx,
+      flowFreq: params.flowFreq,
+      flowTwist: params.flowTwist,
+      flowZSpeed: params.flowZSpeed,
+      force: params.force,
+      maxSpeed: params.maxSpeed,
+      moveFrames: params.moveFrames,
+      tileAlpha: params.tileAlpha,
+      tileShape: params.tileShape,
+      snapToGrid: params.snapToGrid,
+      wrapEdges: params.wrapEdges,
+    });
     sketch.setMaskVisible(params.showMaskOverlay);
     sketch.setMaskImage(null);
     sketch.setDoneExpected(false);
@@ -88,6 +110,19 @@ panes = setupPanes({
     pendingParams = params;
     sketch.setCellsPerFrame(params.cellsPerFrame);
     sketch.setCellSize(params.cellSizePx);
+    sketch.setParticleConfig({
+      cellSize: params.cellSizePx,
+      flowFreq: params.flowFreq,
+      flowTwist: params.flowTwist,
+      flowZSpeed: params.flowZSpeed,
+      force: params.force,
+      maxSpeed: params.maxSpeed,
+      moveFrames: params.moveFrames,
+      tileAlpha: params.tileAlpha,
+      tileShape: params.tileShape,
+      snapToGrid: params.snapToGrid,
+      wrapEdges: params.wrapEdges,
+    });
     sketch.setMaskVisible(params.showMaskOverlay);
   },
 });
@@ -129,6 +164,12 @@ function resolveSampleUrl(sampleName) {
   return new URL(`samples/${sampleName}`, appBaseUrl).toString();
 }
 
+function getBaseName(name) {
+  if (!name) return 'mask_to_ascii';
+  const tail = name.split('/').pop() || name;
+  return tail.replace(/\.[^/.]+$/, '') || 'mask_to_ascii';
+}
+
 
 async function loadSampleImage(sampleName) {
   if (!sampleName) return null;
@@ -147,6 +188,7 @@ async function loadUploadImage(file) {
 async function startRun(params) {
   runToken += 1;
   const activeToken = runToken;
+  animationActive = false;
   sketch.clearQueue();
   sketch.setDoneExpected(false);
   sketch.setMaskImage(null);
@@ -157,14 +199,17 @@ async function startRun(params) {
   }
 
   let sourceBlob = null;
+  let saveBaseName = 'mask_to_ascii';
   if (params.imageSource === 'Upload') {
     if (!params.imageFile) {
       setState(AppState.ERROR, RunStage.NONE, 'エラー: 画像を選択してください');
       return;
     }
     sourceBlob = await loadUploadImage(params.imageFile);
+    saveBaseName = getBaseName(params.imageFile?.name);
   } else {
     sourceBlob = await loadSampleImage(params.sampleName);
+    saveBaseName = getBaseName(params.sampleName);
   }
 
   if (activeToken !== runToken) {
@@ -184,6 +229,7 @@ async function startRun(params) {
   const displayBitmapLocal = await createImageBitmap(sourceBlob);
   const workerBitmap = await createImageBitmap(sourceBlob);
   displayBitmap = displayBitmapLocal;
+  sketch.setSaveBaseName(saveBaseName);
   const fit = fitToViewport(displayBitmap.width, displayBitmap.height);
   sketch.setBaseImage(null);
   sketch.resizeCanvas(fit.width, fit.height);
@@ -196,17 +242,14 @@ async function startRun(params) {
     renderWidth: fit.width,
     renderHeight: fit.height,
     inputSize: 640,
+    moveFrames: Number.isFinite(params.moveFrames) ? Math.max(1, params.moveFrames) : 120,
+    maxSpeed: Number.isFinite(params.maxSpeed) ? params.maxSpeed : 2.8,
   };
 
   try {
     setState(AppState.RUNNING, RunStage.SEGMENTING, '推論中…');
     if (!enrichedParams.selectedClassIndices?.length) {
       setState(AppState.ERROR, RunStage.NONE, 'エラー: クラスを選択してください');
-      workerBitmap?.close?.();
-      return;
-    }
-    if (!enrichedParams.charSet || enrichedParams.charSet.trim().length === 0) {
-      setState(AppState.ERROR, RunStage.NONE, 'エラー: 文字候補が空です');
       workerBitmap?.close?.();
       return;
     }
@@ -270,6 +313,7 @@ async function startRun(params) {
 
 function stopRun() {
   if (currentState !== AppState.RUNNING) return;
+  animationActive = false;
   setState(AppState.RUNNING, RunStage.NONE, '中断中…');
   if (worker) {
     worker.terminate();
@@ -348,6 +392,13 @@ function handleMeta(payload) {
 }
 
 function handleDone() {
+  const total = Number.isFinite(pendingParams?.moveFrames) ? pendingParams.moveFrames : 120;
+  statusText = `アニメーション中… 0/${total}`;
+  panes.status.set(statusText);
+  sketch.setMessage(statusText);
+  currentStage = RunStage.RENDERING;
+  animationActive = true;
+  sketch.resetAnimationFrame?.();
   sketch.setDoneExpected(true);
 }
 

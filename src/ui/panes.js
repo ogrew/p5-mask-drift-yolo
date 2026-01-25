@@ -40,7 +40,7 @@ export function setupPanes({
 
   const inputFolder = paramsPane.addFolder({ title: 'A.入力', expanded: false });
   const segmentationFolder = paramsPane.addFolder({ title: 'B.セグメンテーション', expanded: false });
-  const asciiFolder = paramsPane.addFolder({ title: 'C.ASCIIレンダリング', expanded: false });
+  const asciiFolder = paramsPane.addFolder({ title: 'C.レンダリング', expanded: false });
 
   const imageSourceBinding = inputFolder.addBinding(params, 'imageSource', {
     label: 'Image Source',
@@ -180,7 +180,7 @@ export function setupPanes({
 
   asciiFolder.addBinding(params, 'cellSizePx', {
     label: 'Grid Size',
-    min: 5,
+    min: 1,
     max: 50,
     step: 1,
   }).on('change', (ev) => {
@@ -188,20 +188,97 @@ export function setupPanes({
     onParamsChange?.({ ...params });
   });
 
-  asciiFolder.addBinding(params, 'charSet', {
-    label: 'Characters',
+  asciiFolder.addBinding(params, 'tileShape', {
+    label: 'Tile Shape',
+    options: {
+      Rect: 'rect',
+      Circle: 'circle',
+    },
   }).on('change', (ev) => {
-    params.charSet = ev.value;
+    params.tileShape = ev.value;
     onParamsChange?.({ ...params });
   });
 
-  asciiFolder.addBinding(params, 'cellsPerFrame', {
-    label: 'Cells/Frame',
-    min: 50,
-    max: 5000,
-    step: 50,
+  asciiFolder.addBinding(params, 'tileAlpha', {
+    label: 'Tile Alpha',
+    min: 0.1,
+    max: 1,
+    step: 0.05,
   }).on('change', (ev) => {
-    params.cellsPerFrame = ev.value;
+    params.tileAlpha = ev.value;
+    onParamsChange?.({ ...params });
+  });
+
+  asciiFolder.addBinding(params, 'moveFrames', {
+    label: 'Move Frames',
+    view: 'text',
+  }).on('change', (ev) => {
+    const value = Number(ev.value);
+    params.moveFrames = Number.isFinite(value) ? value : params.moveFrames;
+    onParamsChange?.({ ...params });
+  });
+
+  asciiFolder.addBinding(params, 'flowFreq', {
+    label: 'Flow Freq',
+    min: 0.01,
+    max: 0.2,
+    step: 0.01,
+  }).on('change', (ev) => {
+    params.flowFreq = ev.value;
+    onParamsChange?.({ ...params });
+  });
+
+  asciiFolder.addBinding(params, 'flowTwist', {
+    label: 'Flow Twist',
+    min: 0.5,
+    max: 4,
+    step: 0.1,
+  }).on('change', (ev) => {
+    params.flowTwist = ev.value;
+    onParamsChange?.({ ...params });
+  });
+
+  asciiFolder.addBinding(params, 'flowZSpeed', {
+    label: 'Flow Z Speed',
+    min: 0.0,
+    max: 0.3,
+    step: 0.01,
+  }).on('change', (ev) => {
+    params.flowZSpeed = ev.value;
+    onParamsChange?.({ ...params });
+  });
+
+  asciiFolder.addBinding(params, 'force', {
+    label: 'Force',
+    min: 0.05,
+    max: 1,
+    step: 0.05,
+  }).on('change', (ev) => {
+    params.force = ev.value;
+    onParamsChange?.({ ...params });
+  });
+
+  asciiFolder.addBinding(params, 'maxSpeed', {
+    label: 'Max Speed',
+    min: 1,
+    max: 5,
+    step: 0.1,
+  }).on('change', (ev) => {
+    params.maxSpeed = ev.value;
+    onParamsChange?.({ ...params });
+  });
+
+  asciiFolder.addBinding(params, 'snapToGrid', {
+    label: 'Snap To Grid',
+  }).on('change', (ev) => {
+    params.snapToGrid = ev.value;
+    onParamsChange?.({ ...params });
+  });
+
+  asciiFolder.addBinding(params, 'wrapEdges', {
+    label: 'Wrap Edges',
+  }).on('change', (ev) => {
+    params.wrapEdges = ev.value;
     onParamsChange?.({ ...params });
   });
 

@@ -10,6 +10,7 @@ export function createSketch({
   getStatusText,
   onQueueLength,
   onRenderComplete,
+  onAnimationProgress,
 } = {}) {
   if (!container) {
     throw new Error('Canvas container is missing.');
@@ -18,7 +19,8 @@ export function createSketch({
   let message = '待機中';
   let buffer = null;
   let drawQueue = [];
-  let cellsPerFrame = 200;
+  let particles = [];
+  let cellsPerFrame = 4000;
   let canvasSize = { width: 640, height: 480 };
   let baseImage = null;
   let cellSizePx = 14;
@@ -26,6 +28,22 @@ export function createSketch({
   let lastQueueLength = -1;
   let maskImage = null;
   let maskVisible = false;
+  let saveBaseName = 'mask_to_ascii';
+  let particleConfig = {
+    cellSize: cellSizePx,
+    flowFreq: 0.08,
+    flowTwist: 2.0,
+    flowZSpeed: 0.1,
+    force: 0.2,
+    maxSpeed: 2.8,
+    moveFrames: 180,
+    tileAlpha: 1.0,
+    tileShape: 'rect',
+    snapToGrid: true,
+    wrapEdges: true,
+  };
+  let flowTime = 0;
+  let animationFrame = 0;
 
   const instance = new p5((p) => {
     p.setup = () => {
@@ -36,8 +54,10 @@ export function createSketch({
       p.noStroke();
       buffer = p.createGraphics(canvasSize.width, canvasSize.height);
       buffer.textFont('monospace');
-      buffer.textSize(cellSizePx*1.5);
+      buffer.textSize(cellSizePx);
       buffer.textAlign(p.CENTER, p.CENTER);
+      buffer.rectMode(p.CENTER);
+      buffer.noStroke();
       resetBuffer();
     };
 
@@ -52,8 +72,19 @@ export function createSketch({
       }
       if (buffer) {
         flushQueue();
+        if (particles.length > 0 || drawQueue.length > 0) {
+          flowTime += particleConfig.flowZSpeed ?? 0;
+        }
+        updateParticles(p);
         p.image(buffer, 0, 0);
       }
+    };
+
+    p.keyPressed = () => {
+      if (p.key !== 's' && p.key !== 'S') return;
+      const timestamp = Math.floor(Date.now() / 1000);
+      const name = `${saveBaseName}_${timestamp}`;
+      p.saveCanvas(name, 'jpg');
     };
 
     function flushQueue() {
@@ -61,10 +92,9 @@ export function createSketch({
       const count = Math.min(cellsPerFrame, drawQueue.length);
       for (let i = 0; i < count; i += 1) {
         const cell = drawQueue.shift();
-        cell.draw(buffer);
+        particles.push(cell);
       }
       notifyQueueLength();
-      checkRenderComplete();
     }
 
     function resetBuffer() {
@@ -81,19 +111,56 @@ export function createSketch({
       buffer.textFont('monospace');
       buffer.textSize(cellSizePx);
       buffer.textAlign(p.CENTER, p.CENTER);
+      buffer.rectMode(p.CENTER);
+      buffer.noStroke();
       resetBuffer();
     };
+
+    function updateParticles(p5Instance) {
+      if (particles.length === 0) {
+        checkRenderComplete();
+        return;
+      }
+      animationFrame = Math.min(
+        animationFrame + 1,
+        Math.max(1, particleConfig.moveFrames ?? animationFrame + 1),
+      );
+      onAnimationProgress?.({
+        frame: animationFrame,
+        total: particleConfig.moveFrames ?? animationFrame,
+      });
+      for (let i = particles.length - 1; i >= 0; i -= 1) {
+        const particle = particles[i];
+        particle.step(p5Instance, flowTime, canvasSize);
+        if (particle.dead) {
+          particles.splice(i, 1);
+          continue;
+        }
+        particle.paint(buffer);
+      }
+      checkRenderComplete();
+    }
   });
 
   function enqueueCells(cells) {
-    const nextCells = cells.map((cell) => new MosaicCell(cell));
+    const nextCells = cells.map(
+      (cell) =>
+        new MosaicCell({
+          ...cell,
+          size: cellSizePx,
+          cfg: particleConfig,
+        }),
+    );
     drawQueue = drawQueue.concat(nextCells);
     notifyQueueLength();
   }
 
   function clearQueue() {
     drawQueue = [];
+    particles = [];
     doneExpected = false;
+    flowTime = 0;
+    animationFrame = 0;
     notifyQueueLength();
     instance.resetBuffer?.();
   }
@@ -119,6 +186,7 @@ export function createSketch({
   function checkRenderComplete() {
     if (!doneExpected) return;
     if (drawQueue.length > 0) return;
+    if (particles.length > 0) return;
     doneExpected = false;
     onRenderComplete?.();
   }
@@ -131,13 +199,32 @@ export function createSketch({
     setCellSize(size) {
       if (Number.isFinite(size) && size > 0) {
         cellSizePx = size;
+        particleConfig = { ...particleConfig, cellSize: size };
         if (buffer) {
           buffer.textSize(cellSizePx);
         }
       }
     },
+    setParticleConfig(config = {}) {
+      particleConfig = { ...particleConfig, ...config };
+      if (Number.isFinite(particleConfig.cellSize) && particleConfig.cellSize > 0) {
+        cellSizePx = particleConfig.cellSize;
+        if (buffer) {
+          buffer.textSize(cellSizePx);
+        }
+      }
+      animationFrame = 0;
+    },
+    resetAnimationFrame() {
+      animationFrame = 0;
+    },
     setMaskImage,
     setMaskVisible,
+    setSaveBaseName(name) {
+      if (typeof name === 'string' && name.trim()) {
+        saveBaseName = name.trim();
+      }
+    },
     setDoneExpected(value) {
       doneExpected = !!value;
       checkRenderComplete();
