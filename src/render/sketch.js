@@ -7,6 +7,7 @@ import { MosaicCell } from './mosaic_cell.js';
 
 export function createSketch({
   container,
+  seed,
   getStatusText,
   onQueueLength,
   onRenderComplete,
@@ -23,7 +24,7 @@ export function createSketch({
   let cellsPerFrame = 4000;
   let canvasSize = { width: 640, height: 480 };
   let baseImage = null;
-  let cellSizePx = 14;
+  let cellSizePx = 8;
   let doneExpected = false;
   let lastQueueLength = -1;
   let maskImage = null;
@@ -35,7 +36,7 @@ export function createSketch({
     flowTwist: 2.0,
     flowZSpeed: 0.1,
     force: 0.2,
-    maxSpeed: 2.8,
+    maxSpeed: 1.8,
     moveFrames: 180,
     tileAlpha: 1.0,
     tileShape: 'rect',
@@ -47,15 +48,14 @@ export function createSketch({
 
   const instance = new p5((p) => {
     p.setup = () => {
+      if (Number.isFinite(seed)) {
+        p.randomSeed(seed);
+        p.noiseSeed(seed);
+      }
       const canvas = p.createCanvas(canvasSize.width, canvasSize.height);
       canvas.parent(container);
-      p.textFont('monospace');
-      p.textSize(14);
       p.noStroke();
       buffer = p.createGraphics(canvasSize.width, canvasSize.height);
-      buffer.textFont('monospace');
-      buffer.textSize(cellSizePx);
-      buffer.textAlign(p.CENTER, p.CENTER);
       buffer.rectMode(p.CENTER);
       buffer.noStroke();
       resetBuffer();
@@ -108,9 +108,6 @@ export function createSketch({
       canvasSize = { width, height };
       p.resizeCanvas(width, height);
       buffer = p.createGraphics(width, height);
-      buffer.textFont('monospace');
-      buffer.textSize(cellSizePx);
-      buffer.textAlign(p.CENTER, p.CENTER);
       buffer.rectMode(p.CENTER);
       buffer.noStroke();
       resetBuffer();
@@ -143,12 +140,19 @@ export function createSketch({
   });
 
   function enqueueCells(cells) {
+    const rand =
+      typeof instance?.random === 'function'
+        ? instance.random.bind(instance)
+        : Math.random;
     const nextCells = cells.map(
       (cell) =>
         new MosaicCell({
           ...cell,
           size: cellSizePx,
-          cfg: particleConfig,
+          cfg: {
+            ...particleConfig,
+            rand,
+          },
         }),
     );
     drawQueue = drawQueue.concat(nextCells);
@@ -200,18 +204,12 @@ export function createSketch({
       if (Number.isFinite(size) && size > 0) {
         cellSizePx = size;
         particleConfig = { ...particleConfig, cellSize: size };
-        if (buffer) {
-          buffer.textSize(cellSizePx);
-        }
       }
     },
     setParticleConfig(config = {}) {
       particleConfig = { ...particleConfig, ...config };
       if (Number.isFinite(particleConfig.cellSize) && particleConfig.cellSize > 0) {
         cellSizePx = particleConfig.cellSize;
-        if (buffer) {
-          buffer.textSize(cellSizePx);
-        }
       }
       animationFrame = 0;
     },

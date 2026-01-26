@@ -1,9 +1,8 @@
 export class MosaicCell {
-  constructor({ x, y, char, active = true, color = null, size = 10, cfg = {} }) {
+  constructor({ x, y, active = true, color = null, size = 10, cfg = {} }) {
     this.x = x;
     this.y = y;
     this.size = size;
-    this.char = char;
     this.active = active;
     this.color = color;
     this.cfg = cfg;
@@ -12,7 +11,8 @@ export class MosaicCell {
     this.g = color?.g ?? 255;
     this.b = color?.b ?? 255;
 
-    const a = Math.random() * Math.PI * 2;
+    const rand = this.cfg?.rand ?? Math.random;
+    const a = rand() * Math.PI * 2;
     this.vx = Math.cos(a);
     this.vy = Math.sin(a);
     this.ax = 0;
@@ -20,8 +20,8 @@ export class MosaicCell {
 
     this.age = 0;
     this.life = Math.max(1, cfg.moveFrames ?? 180);
-    this.forceScale = 0.6 + Math.random() * 0.8;
-    this.maxSpeedScale = 0.7 + Math.random() * 0.6;
+    this.forceScale = 0.6 + rand() * 0.8;
+    this.maxSpeedScale = 0.7 + rand() * 0.6;
     this.fade = 255;
     this.dead = false;
   }

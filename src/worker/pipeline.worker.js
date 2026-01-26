@@ -272,12 +272,11 @@ async function runSegmentation({ image, params, renderW, renderH }) {
   return union;
 }
 
-async function buildAsciiCells({
+async function buildMosaicCells({
   runToken,
   width,
   height,
   cellSizePx,
-  charSet,
   cellsChunkSize,
   samplesPerCell,
   imageData,
@@ -309,7 +308,6 @@ async function buildAsciiCells({
     for (let col = 0; col < cols; col += 1) {
       const x = col * cellSizePx;
       const y = row * cellSizePx;
-      let lumSum = 0;
       let rSum = 0;
       let gSum = 0;
       let bSum = 0;
@@ -324,8 +322,6 @@ async function buildAsciiCells({
           const r = data[idx];
           const g = data[idx + 1];
           const b = data[idx + 2];
-          const yVal = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-          lumSum += yVal;
           rSum += r;
           gSum += g;
           bSum += b;
@@ -338,10 +334,6 @@ async function buildAsciiCells({
         }
       }
 
-      const luminance = samples ? lumSum / samples : 0;
-      const t = luminance / 255;
-      const idx = Math.floor((1 - t) * (charSet.length - 1));
-      const char = charSet[idx] ?? '#';
       const coverage = samples ? coverageSum / samples : 0;
       const active = unionMask ? coverage >= coverageThreshold : true;
       const color = samples
@@ -355,7 +347,6 @@ async function buildAsciiCells({
       chunk.push({
         x: x + cellSizePx * 0.5,
         y: y + cellSizePx * 0.5,
-        char,
         active,
         color,
       });
@@ -421,7 +412,6 @@ self.onmessage = async (event) => {
 
   await sleep(50);
 
-  const charSet = params.charSet?.length ? params.charSet : ' .:-=+*#%@';
   const samplesPerCell = params.samplesPerCell ?? 4;
 
   const srcWidth = image?.width ?? 640;
@@ -505,12 +495,11 @@ self.onmessage = async (event) => {
     }, [overlay.buffer]);
   }
 
-  await buildAsciiCells({
+  await buildMosaicCells({
     runToken,
     width: renderW,
     height: renderH,
     cellSizePx: params.cellSizePx,
-    charSet,
     cellsChunkSize: params.cellsChunkSize ?? 5000,
     samplesPerCell,
     imageData,

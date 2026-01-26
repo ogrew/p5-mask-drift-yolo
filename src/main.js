@@ -16,9 +16,11 @@ let pendingParams = null;
 let panes = null;
 let displayBitmap = null;
 let animationActive = false;
+const sessionSeed = Math.floor(Math.random() * 1e9);
 
 const sketch = createSketch({
   container: canvasContainer,
+  seed: sessionSeed,
   getStatusText: () => statusText,
   onQueueLength: (length) => {
     panes?.status?.setQueue?.(length);
@@ -242,8 +244,8 @@ async function startRun(params) {
     renderWidth: fit.width,
     renderHeight: fit.height,
     inputSize: 640,
-    moveFrames: Number.isFinite(params.moveFrames) ? Math.max(1, params.moveFrames) : 120,
-    maxSpeed: Number.isFinite(params.maxSpeed) ? params.maxSpeed : 2.8,
+    moveFrames: Number.isFinite(params.moveFrames) ? Math.max(1, params.moveFrames) : 90,
+    maxSpeed: Number.isFinite(params.maxSpeed) ? params.maxSpeed : 1.8,
   };
 
   try {
@@ -392,7 +394,7 @@ function handleMeta(payload) {
 }
 
 function handleDone() {
-  const total = Number.isFinite(pendingParams?.moveFrames) ? pendingParams.moveFrames : 120;
+  const total = Number.isFinite(pendingParams?.moveFrames) ? pendingParams.moveFrames : 90;
   statusText = `アニメーション中… 0/${total}`;
   panes.status.set(statusText);
   sketch.setMessage(statusText);

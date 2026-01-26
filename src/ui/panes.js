@@ -1,5 +1,5 @@
 import { Pane } from 'tweakpane';
-import { DefaultParams } from '../shared/constants.js';
+import { DefaultParams, ModelInfo } from '../shared/constants.js';
 import { SampleImages } from '../shared/samples.js';
 import { createStatusController } from './status.js';
 
@@ -26,6 +26,13 @@ export function setupPanes({
   };
 
   const status = createStatusController(runPane, '待機中');
+  const modelState = {
+    model: ModelInfo?.label ?? ModelInfo?.path ?? 'yolo11n-seg.onnx',
+  };
+  runPane.addBinding(modelState, 'model', {
+    label: 'MODEL',
+    readonly: true,
+  });
   const runButton = runPane.addButton({ title: 'RUN' });
   const stopButton = runPane.addButton({ title: 'STOP' });
   stopButton.disabled = true;
@@ -144,7 +151,8 @@ export function setupPanes({
     classPlaceholderState = { text: 'ラベル未読み込み' };
   }
 
-  function setClassLabels(labels, defaults = ['car', 'cat', 'person']) {
+  function setClassLabels(labels, defaults = null) {
+    const selectAll = !defaults || defaults === 'all';
     clearClassBindings();
     const entries = (labels ?? [])
       .map((label, index) => ({ label, index }))
@@ -161,7 +169,7 @@ export function setupPanes({
 
     entries.forEach(({ label, index }) => {
       const key = `${index}_${label.replace(/[^a-z0-9]+/gi, '_')}`;
-      classParams[key] = defaults.includes(label);
+      classParams[key] = selectAll ? true : defaults.includes(label);
       classMeta.push({ key, label, index });
       const binding = classFolder.addBinding(classParams, key, { label });
       binding.on('change', updateSelectedClasses);
@@ -175,6 +183,16 @@ export function setupPanes({
     label: 'Show Mask Overlay',
   }).on('change', (ev) => {
     params.showMaskOverlay = ev.value;
+    onParamsChange?.({ ...params });
+  });
+
+  segmentationFolder.addBinding(params, 'coverageThreshold', {
+    label: 'Coverage Threshold',
+    min: 0,
+    max: 1,
+    step: 0.01,
+  }).on('change', (ev) => {
+    params.coverageThreshold = ev.value;
     onParamsChange?.({ ...params });
   });
 
