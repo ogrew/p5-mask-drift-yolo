@@ -8,6 +8,7 @@ node_modules/
 *.onnx
 *.pt
 *.tflite
+!public/models/yolo11n-seg.onnx
 
 # OS
 .DS_Store
