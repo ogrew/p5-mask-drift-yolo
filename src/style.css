@@ -1,6 +1,6 @@
 :root {
-  --bg-1: #1b1d1f;
-  --bg-2: #e6efe8;
+  --bg-1: #0f1824;
+  --bg-2: #edf3fb;
   --ink-1: #1f1b17;
   --ink-2: #5b5147;
   --accent: #ff6b4a;
@@ -26,8 +26,8 @@ body {
   font-family: "Space Grotesk", "M PLUS 1p", sans-serif;
   color: var(--ink-1);
   background:
-    radial-gradient(circle at 12% 12%, rgba(255, 246, 221, 0.9), transparent 45%),
-    radial-gradient(circle at 82% 0%, rgba(210, 238, 230, 0.9), transparent 45%),
+    radial-gradient(circle at 12% 12%, rgba(225, 238, 255, 0.9), transparent 45%),
+    radial-gradient(circle at 82% 0%, rgba(199, 221, 248, 0.9), transparent 45%),
     linear-gradient(135deg, var(--bg-1), var(--bg-2));
 }
 
