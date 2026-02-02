@@ -13,16 +13,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ogrew/mask2ascii.git"
+    "url": "git+https://github.com/ogrew/p5-mask-drift-yolo.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "bugs": {
-    "url": "https://github.com/ogrew/mask2ascii/issues"
+    "url": "https://github.com/ogrew/p5-mask-drift-yolo/issues"
   },
-  "homepage": "https://github.com/ogrew/mask2ascii#readme",
+  "homepage": "https://github.com/ogrew/p5-mask-drift-yolo#readme",
   "devDependencies": {
     "gh-pages": "^6.3.0",
     "vite": "^7.3.1"

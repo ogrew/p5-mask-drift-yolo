@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/mask2ascii/',
+  base: '/p5-mask-drift-yolo/',
 });
