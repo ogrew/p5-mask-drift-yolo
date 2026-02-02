@@ -1,22 +1,43 @@
-export function createStatusController(pane, initialText = '待機中') {
-  const state = { text: initialText, queue: 0 };
-  const binding = pane.addBinding(state, 'text', {
-    label: 'STATUS',
-    readonly: true,
-  });
-  const queueBinding = pane.addBinding(state, 'queue', {
-    label: 'QUEUE',
-    readonly: true,
-  });
+function setStatusClass(target, text) {
+  if (!target) return;
+  target.classList.remove('is-success', 'is-error');
+  if (!text) return;
+  if (/エラー|error/i.test(text)) {
+    target.classList.add('is-error');
+  } else if (/完了|done|success/i.test(text)) {
+    target.classList.add('is-success');
+  }
+}
+
+function setText(target, text) {
+  if (!target) return;
+  target.textContent = text ?? '';
+}
+
+export function createStatusController(
+  { statusEl, detailEl, progressEl, modelEl } = {},
+  initialText = '待機中',
+  initialModel = '',
+) {
+  setText(statusEl, initialText);
+  setText(detailEl, '');
+  setText(progressEl, '');
+  setText(modelEl, initialModel);
+  setStatusClass(statusEl, initialText);
 
   return {
     set(text) {
-      state.text = text;
-      binding.refresh();
+      setText(statusEl, text);
+      setStatusClass(statusEl, text);
     },
-    setQueue(value) {
-      state.queue = Number.isFinite(value) ? value : 0;
-      queueBinding.refresh();
+    setDetail(text) {
+      setText(detailEl, text);
+    },
+    setProgress(text) {
+      setText(progressEl, text);
+    },
+    setModel(text) {
+      setText(modelEl, text);
     },
   };
 }

@@ -4,7 +4,9 @@ import { setupPanes } from './ui/panes.js';
 import { createSketch } from './render/sketch.js';
 import { loadCocoLabels } from './shared/coco_labels.js';
 
-const canvasContainer = document.querySelector('#canvas-panel');
+const canvasContainer = document.querySelector('#canvas-wrap');
+const viewportContainer = document.querySelector('#stage');
+const emptyState = document.querySelector('#empty-state');
 const appBaseUrl = new URL(import.meta.env.BASE_URL || '/', window.location.href);
 
 let currentState = AppState.IDLE;
@@ -16,20 +18,20 @@ let pendingParams = null;
 let panes = null;
 let displayBitmap = null;
 let animationActive = false;
+let previewToken = 0;
+let lastPreviewSample = null;
 const sessionSeed = Math.floor(Math.random() * 1e9);
 
 const sketch = createSketch({
   container: canvasContainer,
   seed: sessionSeed,
   getStatusText: () => statusText,
-  onQueueLength: (length) => {
-    panes?.status?.setQueue?.(length);
-  },
   onAnimationProgress: ({ frame, total }) => {
     if (!animationActive || !total || frame > total) return;
     const text = `アニメーション中… ${frame}/${total}`;
     statusText = text;
     panes?.status?.set(text);
+    panes?.status?.setProgress?.(`${frame}/${total}`);
     sketch.setMessage(text);
   },
   onRenderComplete: () => {
@@ -38,8 +40,17 @@ const sketch = createSketch({
   },
 });
 
+function setEmptyVisible(isVisible) {
+  if (!emptyState) return;
+  emptyState.classList.toggle('is-visible', !!isVisible);
+}
+
+function syncEmptyState() {
+  setEmptyVisible(!displayBitmap);
+}
+
 function getViewportSize() {
-  const rect = canvasContainer?.getBoundingClientRect?.();
+  const rect = viewportContainer?.getBoundingClientRect?.();
   const width = Math.floor(rect?.width ?? window.innerWidth ?? 0);
   const height = Math.floor(rect?.height ?? window.innerHeight ?? 0);
   return {
@@ -56,34 +67,13 @@ function fitToViewport(srcWidth, srcHeight) {
   return { width, height };
 }
 
-function positionUiOverlay() {
-  const overlay = document.querySelector('#ui-overlay');
-  if (!overlay) return;
-  const margin = 12;
-  const rect = overlay.getBoundingClientRect();
-  const width = rect.width || overlay.offsetWidth || 0;
-  const viewport = window.visualViewport;
-  const viewWidth = viewport?.width ?? document.documentElement.clientWidth;
-  const viewLeft = viewport?.offsetLeft ?? 0;
-  const left = Math.max(margin, viewLeft + viewWidth - width - margin);
-  overlay.style.position = 'fixed';
-  overlay.style.top = `${margin}px`;
-  overlay.style.left = `${left}px`;
-  overlay.style.right = 'auto';
-  overlay.style.zIndex = '9999';
-  overlay.style.display = 'flex';
-  overlay.style.visibility = 'visible';
-  overlay.style.opacity = '1';
-}
-
-window.addEventListener('resize', positionUiOverlay);
-
 panes = setupPanes({
   onRun: (params) => {
     if (currentState === AppState.RUNNING) return;
     pendingParams = params;
     sketch.setCellsPerFrame(params.cellsPerFrame);
     sketch.setCellSize(params.cellSizePx);
+    sketch.setSeed(params.noiseSeed);
     sketch.setParticleConfig({
       cellSize: params.cellSizePx,
       flowFreq: params.flowFreq,
@@ -112,6 +102,7 @@ panes = setupPanes({
     pendingParams = params;
     sketch.setCellsPerFrame(params.cellsPerFrame);
     sketch.setCellSize(params.cellSizePx);
+    sketch.setSeed(params.noiseSeed);
     sketch.setParticleConfig({
       cellSize: params.cellSizePx,
       flowFreq: params.flowFreq,
@@ -127,15 +118,9 @@ panes = setupPanes({
     });
     sketch.setMaskVisible(params.showMaskOverlay);
   },
-});
-
-requestAnimationFrame(() => {
-  requestAnimationFrame(positionUiOverlay);
-  const overlay = document.querySelector('#ui-overlay');
-  if (overlay && 'ResizeObserver' in window) {
-    const observer = new ResizeObserver(() => positionUiOverlay());
-    observer.observe(overlay);
-  }
+  onSampleChange: (sampleName, params) => {
+    previewSample(sampleName, params);
+  },
 });
 
 loadCocoLabels(appBaseUrl)
@@ -152,6 +137,8 @@ function setState(nextState, nextStage, text) {
   currentStage = nextStage;
   statusText = text;
   panes?.status?.set(text);
+  panes?.status?.setDetail?.(nextStage !== RunStage.NONE ? nextStage : '');
+  panes?.status?.setProgress?.('');
   sketch.setMessage(text);
 
   const isRunning = currentState === AppState.RUNNING;
@@ -185,6 +172,67 @@ async function loadSampleImage(sampleName) {
 async function loadUploadImage(file) {
   if (!file) return null;
   return file;
+}
+
+async function previewSample(sampleName, params) {
+  if (!sampleName) return;
+  if (currentState === AppState.RUNNING) return;
+  if (sampleName === lastPreviewSample && displayBitmap) return;
+  lastPreviewSample = sampleName;
+  const token = ++previewToken;
+
+  statusText = 'サンプル読み込み中…';
+  panes?.status?.set(statusText);
+  panes?.status?.setDetail?.(RunStage.LOADING);
+  panes?.status?.setProgress?.('');
+  sketch.setMessage(statusText);
+
+  try {
+    const sourceBlob = await loadSampleImage(sampleName);
+    if (token !== previewToken || currentState === AppState.RUNNING) return;
+    if (!sourceBlob) {
+      throw new Error('Failed to load sample');
+    }
+
+    if (displayBitmap) {
+      sketch.setBaseImage(null);
+      displayBitmap.close?.();
+      displayBitmap = null;
+    }
+
+    const bitmap = await createImageBitmap(sourceBlob);
+    if (token !== previewToken || currentState === AppState.RUNNING) {
+      bitmap.close?.();
+      return;
+    }
+
+    displayBitmap = bitmap;
+    sketch.clearQueue();
+    sketch.setDoneExpected(false);
+    sketch.setMaskImage(null);
+    sketch.setMaskVisible(!!params?.showMaskOverlay);
+    sketch.setSaveBaseName(getBaseName(sampleName));
+
+    const fit = fitToViewport(displayBitmap.width, displayBitmap.height);
+    sketch.setBaseImage(null);
+    sketch.resizeCanvas(fit.width, fit.height);
+    sketch.setBaseImage(displayBitmap);
+    syncEmptyState();
+
+    statusText = '待機中';
+    panes?.status?.set(statusText);
+    panes?.status?.setDetail?.('');
+    panes?.status?.setProgress?.('');
+    sketch.setMessage(statusText);
+  } catch (error) {
+    if (token !== previewToken) return;
+    console.error(error);
+    statusText = 'エラー: サンプル読み込みに失敗しました';
+    panes?.status?.set(statusText);
+    panes?.status?.setDetail?.(RunStage.NONE);
+    panes?.status?.setProgress?.('');
+    sketch.setMessage(statusText);
+  }
 }
 
 async function startRun(params) {
@@ -227,6 +275,7 @@ async function startRun(params) {
     sketch.setBaseImage(null);
     displayBitmap.close?.();
     displayBitmap = null;
+    syncEmptyState();
   }
   const displayBitmapLocal = await createImageBitmap(sourceBlob);
   const workerBitmap = await createImageBitmap(sourceBlob);
@@ -236,6 +285,7 @@ async function startRun(params) {
   sketch.setBaseImage(null);
   sketch.resizeCanvas(fit.width, fit.height);
   sketch.setBaseImage(displayBitmap);
+  syncEmptyState();
 
   const enrichedParams = {
     ...params,
@@ -331,6 +381,7 @@ function stopRun() {
 function handleStatus(payload) {
   if (!payload) return;
   currentStage = payload.stage ?? currentStage;
+  panes?.status?.setDetail?.(currentStage !== RunStage.NONE ? currentStage : '');
   if (payload.stage === 'ERROR') {
     setState(AppState.ERROR, RunStage.NONE, payload.text ?? 'エラー');
     return;
@@ -338,6 +389,7 @@ function handleStatus(payload) {
   if (payload.text) {
     statusText = payload.text;
     panes.status.set(statusText);
+    panes?.status?.setProgress?.('');
     sketch.setMessage(statusText);
   }
 }
@@ -370,6 +422,7 @@ function handleCells(payload) {
   sketch.enqueueCells(payload.cells);
   statusText = '描画中…';
   panes.status.set(statusText);
+  panes?.status?.setDetail?.(RunStage.RENDERING);
   sketch.setMessage(statusText);
   currentStage = RunStage.RENDERING;
 
@@ -380,6 +433,7 @@ function handleCells(payload) {
       const percent = Math.round(ratio * 100);
       const text = `描画中… ${percent}%`;
       panes.status.set(text);
+      panes?.status?.setProgress?.(`${percent}%`);
       sketch.setMessage(text);
     }
   }
@@ -397,6 +451,8 @@ function handleDone() {
   const total = Number.isFinite(pendingParams?.moveFrames) ? pendingParams.moveFrames : 90;
   statusText = `アニメーション中… 0/${total}`;
   panes.status.set(statusText);
+  panes?.status?.setDetail?.(RunStage.RENDERING);
+  panes?.status?.setProgress?.(`0/${total}`);
   sketch.setMessage(statusText);
   currentStage = RunStage.RENDERING;
   animationActive = true;
@@ -405,3 +461,4 @@ function handleDone() {
 }
 
 setState(AppState.IDLE, RunStage.NONE, '待機中');
+syncEmptyState();

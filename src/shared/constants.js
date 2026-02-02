@@ -19,7 +19,7 @@ export const RunStage = Object.freeze({
 export const DefaultParams = Object.freeze({
   imageSource: 'Sample',
   sampleName: SampleImages[0]?.value ?? '',
-  cellSizePx: 8,
+  cellSizePx: 6,
   showMaskOverlay: false,
   cellsPerFrame: 4000,
   cellsChunkSize: 5000,
@@ -36,6 +36,7 @@ export const DefaultParams = Object.freeze({
   tileShape: 'rect',
   snapToGrid: true,
   wrapEdges: true,
+  noiseSeed: Math.floor(Math.random() * 100000) + 1,
 });
 
 export const ModelInfo = Object.freeze({

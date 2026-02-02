@@ -24,7 +24,7 @@ export function createSketch({
   let cellsPerFrame = 4000;
   let canvasSize = { width: 640, height: 480 };
   let baseImage = null;
-  let cellSizePx = 8;
+  let cellSizePx = 6;
   let doneExpected = false;
   let lastQueueLength = -1;
   let maskImage = null;
@@ -45,12 +45,13 @@ export function createSketch({
   };
   let flowTime = 0;
   let animationFrame = 0;
+  let currentSeed = Number.isFinite(seed) ? seed : null;
 
   const instance = new p5((p) => {
     p.setup = () => {
-      if (Number.isFinite(seed)) {
-        p.randomSeed(seed);
-        p.noiseSeed(seed);
+      if (Number.isFinite(currentSeed)) {
+        p.randomSeed(currentSeed);
+        p.noiseSeed(currentSeed);
       }
       const canvas = p.createCanvas(canvasSize.width, canvasSize.height);
       canvas.parent(container);
@@ -229,6 +230,16 @@ export function createSketch({
     },
     setCellsPerFrame(value) {
       cellsPerFrame = value;
+    },
+    setSeed(nextSeed) {
+      if (!Number.isFinite(nextSeed)) return;
+      currentSeed = nextSeed;
+      if (typeof instance?.randomSeed === 'function') {
+        instance.randomSeed(currentSeed);
+      }
+      if (typeof instance?.noiseSeed === 'function') {
+        instance.noiseSeed(currentSeed);
+      }
     },
     resizeCanvas(width, height) {
       instance.resizeForImage?.(width, height);

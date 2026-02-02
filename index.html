@@ -3,17 +3,106 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mask-drift-yolo</title>
+    <title>Mask Drift YOLO</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=M+PLUS+1p:wght@400;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.min.css"
+    />
   </head>
   <body>
     <div id="app">
-      <main id="layout">
-        <section id="canvas-panel"></section>
-      </main>
-      <section id="ui-overlay">
-        <div id="run-panel"></div>
-        <div id="params-panel"></div>
-      </section>
+      <div id="stage">
+        <div id="canvas-wrap"></div>
+        <div id="empty-state" aria-live="polite">
+          <div class="empty-title">Mask Drift YOLO</div>
+          <div class="empty-sub">
+            サンプル画像を選択するか、ローカルJPG/PNGをドロップして開始します。
+          </div>
+        </div>
+      </div>
+      <aside id="ui" aria-label="controls">
+        <div class="ui-header">
+          <div class="ui-title">Mask Drift YOLO</div>
+          <button id="togglePanel" type="button">Hide Panel</button>
+        </div>
+        <div class="ui-block">
+          <label class="ui-label" for="sampleSelect">Sample Image</label>
+          <select id="sampleSelect"></select>
+          <button id="refreshSamples" type="button">Reload Samples</button>
+        </div>
+        <div class="ui-block">
+          <label class="ui-label" for="fileInput">Local Image</label>
+          <div
+            id="dropZone"
+            class="drop-zone"
+            role="button"
+            tabindex="0"
+            aria-label="Drop file or click to browse"
+          >
+            <div class="drop-zone-text">Drop file or click to browse</div>
+            <input id="fileInput" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
+          </div>
+          <div class="ui-note">
+            Local images are processed in your browser only.
+          </div>
+        </div>
+        <div class="ui-block ui-actions">
+          <button id="playButton" type="button">Run</button>
+          <button id="stopButton" type="button">Stop</button>
+        </div>
+        <div class="ui-block">
+          <details id="statusTab" class="ui-status-tab">
+            <summary>Status</summary>
+            <div class="ui-status">
+              <div class="ui-status-row">
+                <div class="ui-label">Status</div>
+                <div id="statusValue">待機中</div>
+              </div>
+              <div class="ui-status-row">
+                <div class="ui-label">Stage</div>
+                <div id="detailValue"></div>
+              </div>
+              <div class="ui-status-row">
+                <div class="ui-label">Progress</div>
+                <div id="progressValue"></div>
+              </div>
+              <div class="ui-status-row">
+                <div class="ui-label">Model</div>
+                <div id="modelValue">yolo11n-seg.onnx</div>
+              </div>
+            </div>
+          </details>
+        </div>
+        <div class="ui-block">
+          <div class="ui-label">Parameters</div>
+          <div id="pane"></div>
+        </div>
+        <div class="ui-shortcuts">p: Toggle panel / s: Save JPG</div>
+      </aside>
+    </div>
+    <div id="socialButtons">
+      <a
+        id="followButton"
+        href="https://x.com/dn0t_"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Follow
+      </a>
+      <a
+        id="repoButton"
+        href="https://github.com/ogrew/p5-mask-drift-yolo"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        GitHub
+      </a>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>
